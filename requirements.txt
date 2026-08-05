@@ -1,9 +1,10 @@
 streamlit
-chromadb
-sentence-transformers
-google-generativeai
+easyocr
+numpy
 Pillow
 pandas
 python-dotenv
 fpdf
-requests
+torch
+torchvision
+torchaudio

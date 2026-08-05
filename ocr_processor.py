@@ -1,91 +1,53 @@
 # ocr_processor.py
-import requests
-import base64
-import os
-import json
+import io
+import warnings
+import numpy as np
+from PIL import Image
 from typing import Tuple, Optional
-import config
+import streamlit as st
+import easyocr  # CRITICAL: Added missing import
+import config   # CRITICAL: Added missing import to load API keys if needed elsewhere
+
+# Suppress PyTorch and EasyOCR deprecation/execution warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+
+# Cache the EasyOCR model so it loads into memory only once
+@st.cache_resource(show_spinner="Loading OCR Model...")
+def get_ocr_reader():
+    # Load the CPU version (no GPU required, prevents cloud crashes)
+    return easyocr.Reader(['en'], gpu=False)
 
 class OCRProcessor:
     def __init__(self):
-        self.api_key = config.GEMINI_API_KEY
-        # Using the standard v1beta model endpoint
-        self.url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
-
-    def extract_text_from_image(self, image_path) -> Tuple[Optional[str], str]:
-        """
-        Takes a direct FILE PATH string and sends it DIRECTLY to Gemini's API 
-        using a standard HTTP request.
-        """
-        if not image_path or not os.path.exists(image_path):
-            return None, "Unknown Product"
-
         try:
-            # 1. Read the image and encode it to Base64
-            with open(image_path, "rb") as image_file:
-                encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+            self.reader = get_ocr_reader()
+        except Exception:
+            self.reader = None
 
-            # 2. Prepare the JSON payload for Google's API
-            payload = {
-                "contents": [
-                    {
-                        "parts": [
-                            {
-                                "text": "Read this image and extract the exact text. Do not add any conversational commentary. Just return the raw text."
-                            },
-                            {
-                                "inline_data": {
-                                    "mime_type": "image/jpeg",
-                                    "data": encoded_image
-                                }
-                            }
-                        ]
-                    }
-                ],
-                "generationConfig": {
-                    "temperature": 0.0,
-                    "topK": 1,
-                    "topP": 1,
-                    "maxOutputTokens": 2048
-                },
-                "safetySettings": [
-                    {
-                        "category": "HARM_CATEGORY_HARASSMENT",
-                        "threshold": "BLOCK_NONE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_HATE_SPEECH",
-                        "threshold": "BLOCK_NONE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        "threshold": "BLOCK_NONE"
-                    },
-                    {
-                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        "threshold": "BLOCK_NONE"
-                    }
-                ]
-            }
-
-            # 3. Send the request
-            headers = {'Content-Type': 'application/json'}
-            response = requests.post(self.url, headers=headers, json=payload)
-            
-            # 4. Parse the response
-            if response.status_code == 200:
-                data = response.json()
-                try:
-                    text_result = data['candidates'][0]['content']['parts'][0]['text']
-                    print(f"\n--- DIRECT API SUCCESS ---\n{text_result}\n--------------------------\n")
-                    return text_result.strip(), "Analyzed Product"
-                except (KeyError, IndexError):
-                    print(f"API returned JSON but no text: {data}")
-                    return "", "Unknown Product"
+    def extract_text_from_image(self, image_input) -> Tuple[Optional[str], str]:
+        try:
+            if isinstance(image_input, bytes):
+                img = Image.open(io.BytesIO(image_input))
+            elif isinstance(image_input, str):
+                img = Image.open(image_input)
             else:
-                print(f"API ERROR {response.status_code}: {response.text}")
-                return "", "Unknown Product"
-                
+                img = image_input
+
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            img_np = np.array(img)
+
+            if self.reader:
+                results = self.reader.readtext(img_np, detail=0)
+                extracted_text = "\n".join(results)
+
+                if extracted_text and len(extracted_text.strip()) > 3:
+                    return extracted_text.strip(), "Analyzed Product"
+
+            return "NOT_FOUND: No readable text detected.", "Error"
+
         except Exception as e:
-            print(f"CRITICAL ERROR IN OCR: {e}")
-            return "", "Unknown Product"
+            return f"CRITICAL ERROR: {str(e)}", "Error"
