@@ -83,32 +83,23 @@ class IngredientParser:
         allergies_lower = [a.lower().strip() for a in user_allergies]
 
         for item in ingredients:
-            # Skip false positive terms explicitly
-            if item in self.harmless_terms:
-                results.append({
-                    "ingredient": item,
-                    "status": "safe",
-                    "allergen_group": None,
-                    "risk_level": None
-                })
-                continue
-
+            # Default state
             status = "safe"
             matched_group = None
             risk_level = None
 
             # 1. Check for exact or partial ingredient matches against the user's allergies
             for allergen in allergies_lower:
-                # Create a generic base word (removes 's' for plural, but keeps exceptions like "peanuts" -> "peanut")
+                # Create a generic base word (removes 's' for plural)
                 if allergen.endswith('s') and len(allergen) > 3:
                     base_allergen = allergen[:-1]
                 else:
                     base_allergen = allergen
 
                 # Use pattern to find the allergen as a standalone word inside the ingredient text
-                # This prevents matching "roasted peanuts" when user only selected "peanut"
                 pattern = r'\b' + re.escape(base_allergen) + r's?\b'
                 
+                # ALLOW "may contain" to be caught
                 if re.search(pattern, item, re.IGNORECASE):
                     status = "danger"
                     matched_group = allergen.capitalize()
@@ -123,7 +114,6 @@ class IngredientParser:
             })
 
         return results
-
     def get_safety_summary(self, allergen_results: list) -> dict:
         danger_count = sum(1 for r in allergen_results if r.get('status') == 'danger')
         warning_count = sum(1 for r in allergen_results if r.get('status') == 'warning')
