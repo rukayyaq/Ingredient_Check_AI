@@ -6,3 +6,4 @@ python-dotenv
 pytesseract
 numpy
 chromadb
+sentence-transformers
