@@ -1,0 +1,30 @@
+ingredient_name,common_name,category,allergen_group,risk_level,description,source
+Sodium Caseinate,Milk Protein,Dairy,Milk/Dairy,High,Derived from milk. Found in protein bars and processed foods,FDA Allergen Guidelines
+Whey,Milk Byproduct,Dairy,Milk/Dairy,High,Liquid remaining after milk curdling. Used in baked goods,FDA Allergen Guidelines
+Lactose,Milk Sugar,Dairy,Milk/Dairy,High,Milk sugar. Found in many processed foods,FDA Allergen Guidelines
+Casein,Milk Protein,Dairy,Milk/Dairy,High,Main protein in milk. Used in cheese and protein supplements,FDA Allergen Guidelines
+Albumin,Egg White Protein,Protein,Eggs,High,Used as binder in processed foods. Derived from eggs,FDA Allergen Guidelines
+Lysozyme,Enzyme,Preservative,Eggs,High,Derived from egg whites. Used as preservative,FDA Allergen Guidelines
+Lecithin (Soy),Emulsifier,Soy,Soy,Medium,Check source - can be soy or sunflower derived,FDA Allergen Guidelines
+Soy Protein Isolate,Protein,Soy,Soy,High,Concentrated soy protein. Found in protein bars and meat alternatives,FDA Allergen Guidelines
+Hydrolyzed Soy Protein,Flavor Enhancer,Soy,Soy,High,Used in soups and sauces,FDA Allergen Guidelines
+Maltodextrin,Starch,Grains,Wheat/Gluten,Medium,May be derived from wheat. Check source,FDA Allergen Guidelines
+Modified Food Starch,Thickener,Grains,Wheat/Gluten,Medium,May contain wheat. Check label for source,FDA Allergen Guidelines
+Hydrolyzed Wheat Protein,Protein,Grains,Wheat/Gluten,High,Used in cosmetics and food products,FDA Allergen Guidelines
+Arachis Oil,Peanut Oil,Nuts,Peanuts,High,Derived from peanuts. Found in cooking oils,FDA Allergen Guidelines
+Groundnut Oil,Peanut Oil,Nuts,Peanuts,High,Another name for peanut oil,FDA Allergen Guidelines
+Almond Extract,Flavoring,Nuts,Tree Nuts,High,Derived from almonds. Used in baking,FDA Allergen Guidelines
+Gelatin,Gelling Agent,Animal,Not Allergen,None,Animal-derived. Vegan concern - made from animal bones and skin,Vegetarian Society
+Cochineal Extract,Red Food Coloring,Additives,Not Allergen,None,Insect-derived red dye. Vegan concern,FDA Color Additives
+Carmine,Red Food Coloring,Additives,Not Allergen,None,Same as cochineal extract. Derived from insects,FDA Color Additives
+Honey,Sweetener,Natural,Not Allergen,None,Bee product. Not vegan,Vegetarian Society
+Isinglass,Clarifying Agent,Animal,Fish,Medium,Fish bladder derivative. Used in beer and wine,FDA Allergen Guidelines
+Sodium Metabisulphite,Preservative,Chemicals,Sulphites,Medium,Used as preservative in dried fruits and wine,FDA Allergen Guidelines
+Sulphur Dioxide,Preservative,Chemicals,Sulphites,Medium,Used in dried fruits and processed foods,FDA Allergen Guidelines
+Worcestershire Sauce,Condiment,Mixed,Fish,Medium,Contains anchovies. Used in sauces and marinades,FDA Allergen Guidelines
+Margarine,Spread,Mixed,Milk/Dairy,Medium,May contain milk proteins. Check label,General Knowledge
+Ghee,Clarified Butter,Dairy,Milk/Dairy,High,Pure milk fat. Contains dairy,FSSAI Guidelines
+Paneer,Indian Cheese,Dairy,Milk/Dairy,High,Fresh cheese. Contains dairy,FSSAI Guidelines
+Besan,Chickpea Flour,Legume,Not Allergen,None,Chickpea flour. Generally safe,General Knowledge
+Asafoetida (Hing),Spice,Spices,Wheat/Gluten,Low,Often mixed with wheat flour as anti-caking agent,General Knowledge
+Hydrogenated Vegetable Oil,Hydrogenated Oil,Fats,Not Allergen,Medium,Vegetable oil chemically modified by hydrogenation. May contain trans fats. Source depends on manufacturer.,General Knowledge
