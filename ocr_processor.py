@@ -5,26 +5,26 @@ import numpy as np
 from PIL import Image
 from typing import Tuple, Optional
 import streamlit as st
-import easyocr  # CRITICAL: Added missing import
-import config   # CRITICAL: Added missing import to load API keys if needed elsewhere
+import pytesseract  # Edited: Switched from EasyOCR to Tesseract
+import config
 
-# Suppress PyTorch and EasyOCR deprecation/execution warnings
+# Suppress warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-
-# Cache the EasyOCR model so it loads into memory only once
-@st.cache_resource(show_spinner="Loading OCR Model...")
-def get_ocr_reader():
-    # Load the CPU version (no GPU required, prevents cloud crashes)
-    return easyocr.Reader(['en'], gpu=False)
+# Edited: Removed the massive EasyOCR download. 
+# Streamlit Cloud uses Linux. We just tell it where Tesseract is installed.
+@st.cache_resource(show_spinner="Loading OCR Engine...")
+def get_ocr_engine():
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+    return pytesseract
 
 class OCRProcessor:
     def __init__(self):
         try:
-            self.reader = get_ocr_reader()
+            self.engine = get_ocr_engine()
         except Exception:
-            self.reader = None
+            self.engine = None
 
     def extract_text_from_image(self, image_input) -> Tuple[Optional[str], str]:
         try:
@@ -38,11 +38,9 @@ class OCRProcessor:
             if img.mode != 'RGB':
                 img = img.convert('RGB')
 
-            img_np = np.array(img)
-
-            if self.reader:
-                results = self.reader.readtext(img_np, detail=0)
-                extracted_text = "\n".join(results)
+            # Edited: Switched to Tesseract's image_to_string function
+            if self.engine:
+                extracted_text = self.engine.image_to_string(img)
 
                 if extracted_text and len(extracted_text.strip()) > 3:
                     return extracted_text.strip(), "Analyzed Product"

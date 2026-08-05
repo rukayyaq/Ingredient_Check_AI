@@ -1,12 +1,7 @@
 streamlit
-easyocr
-numpy
-Pillow
 pandas
-python-dotenv
+Pillow
 fpdf
-torch
-torchvision
-torchaudio
-chromadb
-sentence-transformers
+python-dotenv
+pytesseract
+numpy
