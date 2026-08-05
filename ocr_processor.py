@@ -1,15 +1,15 @@
-import io
-import warnings
-import numpy as np
-from PIL import Image
+import requests
+import base64
+import os
+import json
 from typing import Tuple, Optional
-import streamlit as st
+import config
 
 # Suppress PyTorch and EasyOCR deprecation/execution warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-import easyocr
+
 
 # Cache the EasyOCR model so it loads into memory only once
 @st.cache_resource(show_spinner="Loading OCR Model...")
