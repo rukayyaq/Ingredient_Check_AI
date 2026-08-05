@@ -28,21 +28,11 @@ class IngredientParser:
 
     def parse_ingredients(self, raw_text: str) -> list:
         """Parses complex ingredient lists and splits advisory statements properly."""
-        
-        # ==========================================
-        # 🚨 DEBUGGING BLOCK: SHOW THE RAW TEXT 🚨
-        # ==========================================
-        # This prints the text on your screen so we can see what EasyOCR actually read.
-        import streamlit as st
-        if raw_text:
-            st.warning("🔍 DEBUG: EasyOCR read the following text:")
-            st.code(raw_text, language="text")
-        # ==========================================
-        
         cleaned = self.clean_text(raw_text)
         if not cleaned:
             return []
 
+        # Separate main list from "CONTAINS:" or "May contain:" statements
         advisory_statements = []
         
         # Match "May contain..." or "Contains..."
@@ -97,16 +87,27 @@ class IngredientParser:
             status = "safe"
             matched_group = None
             risk_level = None
+            
+            # CRITICAL FIX: Check the exact word item against harmless list
+            # but ONLY if we haven't already flagged a danger.
+            if item in self.harmless_terms:
+                results.append({
+                    "ingredient": item,
+                    "status": "safe",
+                    "allergen_group": None,
+                    "risk_level": None
+                })
+                continue
 
             # 1. Check for exact or partial ingredient matches against the user's allergies
             for allergen in allergies_lower:
-                # Create a generic base word (removes 's' for plural)
+                # Create a generic base word (removes 's' for plural, but keeps exceptions)
                 if allergen.endswith('s') and len(allergen) > 3:
                     base_allergen = allergen[:-1]
                 else:
                     base_allergen = allergen
 
-                # Use pattern to find the allergen as a standalone word inside the ingredient text
+                # CRITICAL FIX: Use pattern to find the allergen as a standalone word
                 pattern = r'\b' + re.escape(base_allergen) + r's?\b'
                 
                 # ALLOW "may contain" to be caught
