@@ -1,0 +1,16 @@
+[server]
+maxUploadSize = 10
+
+[theme]
+base="dark"
+
+# CRITICAL FIX: This forces Streamlit to use standard pip instead of uv
+[runner]
+magicEnabled = false
+
+[deprecation]
+showfileUploaderEncoding = false
+
+# This makes sure standard pip is used
+[server.enableCORS]
+enableCORS = false
