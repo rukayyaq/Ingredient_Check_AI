@@ -9,7 +9,7 @@ import config
 from ingredient_parser import IngredientParser
 from llm_analyzer import LLMAnalyzer
 from ocr_processor import OCRProcessor
-#from rag_pipeline import RAGPipeline
+from rag_pipeline import RAGPipeline
 from utils import create_download_report, init_session_state
 
 # Page config
