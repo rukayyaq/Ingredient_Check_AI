@@ -1,3 +1,4 @@
+# ingredient_parser.py
 import re
 
 class IngredientParser:
@@ -5,7 +6,9 @@ class IngredientParser:
         # Explicit non-allergen terms to prevent false positives
         self.harmless_terms = {
             "iron", "reduced iron", "barley", "malted barley", "folic acid",
-            "thiamin", "riboflavin", "niacin", "ascorbic acid", "salt", "sugar"
+            "thiamin", "riboflavin", "niacin", "ascorbic acid", "salt", "sugar",
+            "corn", "cornmeal", "flour", "wheat", "wheat flour", "rice", "oil",
+            "soybean oil", "vegetable oil", "honey", "natural flavor"
         }
 
     def clean_text(self, text: str) -> str:
@@ -16,7 +19,7 @@ class IngredientParser:
         # Remove 'Ingredients:' prefix if present
         text = re.sub(r'^(ingredients|contains)[\s:]*', '', text, flags=re.IGNORECASE)
         
-        # Remove footnotes like "*One of the B vitamins"
+        # Remove footnotes like "*One of the B vitamins" (Stop at newline)
         text = re.sub(r'\*+.*?(?=(\n|$))', '', text)
         
         # Normalize whitespace and line breaks
@@ -32,13 +35,13 @@ class IngredientParser:
         # Separate main list from "CONTAINS:" or "May contain:" statements
         advisory_statements = []
         
-        # Match "May contain..." or "Contains..."
+        # Match "May contain..." or "Contains..." (Stop at a period or end of string)
         advisory_matches = re.finditer(r'\b(contains|may contain)\b[:\s]+(.*?)(?=\.|$)', cleaned, re.IGNORECASE)
         for match in advisory_matches:
             statement_content = match.group(2).lower()
-            # Cleanly split advisory list on commas or 'and'
+            # Cleanly split advisory list on commas, semicolons, or 'and'
             items = re.split(r'[,;]|\band\b', statement_content)
-            advisory_statements.extend(items)
+            advisory_statements.extend([it.strip() for it in items if it.strip()])
 
         # Truncate main ingredient string before advisory statements start
         first_advisory = re.search(r'\b(contains|may contain)\b', cleaned, re.IGNORECASE)
@@ -76,6 +79,7 @@ class IngredientParser:
     def check_allergens(self, ingredients: list, user_allergies: list) -> list:
         """Matches extracted ingredients accurately against user selected allergies."""
         results = []
+        # Normalize user allergies to lowercase
         allergies_lower = [a.lower().strip() for a in user_allergies]
 
         for item in ingredients:
@@ -93,11 +97,18 @@ class IngredientParser:
             matched_group = None
             risk_level = None
 
+            # 1. Check for exact or partial ingredient matches against the user's allergies
             for allergen in allergies_lower:
-                base_allergen = allergen.rstrip('s')
+                # Create a generic base word (removes 's' for plural, but keeps exceptions like "peanuts" -> "peanut")
+                if allergen.endswith('s') and len(allergen) > 3:
+                    base_allergen = allergen[:-1]
+                else:
+                    base_allergen = allergen
+
+                # Use pattern to find the allergen as a standalone word inside the ingredient text
+                # This prevents matching "roasted peanuts" when user only selected "peanut"
                 pattern = r'\b' + re.escape(base_allergen) + r's?\b'
                 
-                # Precise word boundary matching to eliminate string artifacts
                 if re.search(pattern, item, re.IGNORECASE):
                     status = "danger"
                     matched_group = allergen.capitalize()
