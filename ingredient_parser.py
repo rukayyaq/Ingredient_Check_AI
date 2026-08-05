@@ -19,7 +19,7 @@ class IngredientParser:
         # Remove 'Ingredients:' prefix if present
         text = re.sub(r'^(ingredients|contains)[\s:]*', '', text, flags=re.IGNORECASE)
         
-        # Remove footnotes like "*One of the B vitamins" (Stop at newline)
+        # Remove footnotes like "*One of the B vitamins"
         text = re.sub(r'\*+.*?(?=(\n|$))', '', text)
         
         # Normalize whitespace and line breaks
@@ -28,14 +28,24 @@ class IngredientParser:
 
     def parse_ingredients(self, raw_text: str) -> list:
         """Parses complex ingredient lists and splits advisory statements properly."""
+        
+        # ==========================================
+        # 🚨 DEBUGGING BLOCK: SHOW THE RAW TEXT 🚨
+        # ==========================================
+        # This prints the text on your screen so we can see what EasyOCR actually read.
+        import streamlit as st
+        if raw_text:
+            st.warning("🔍 DEBUG: EasyOCR read the following text:")
+            st.code(raw_text, language="text")
+        # ==========================================
+        
         cleaned = self.clean_text(raw_text)
         if not cleaned:
             return []
 
-        # Separate main list from "CONTAINS:" or "May contain:" statements
         advisory_statements = []
         
-        # Match "May contain..." or "Contains..." (Stop at a period or end of string)
+        # Match "May contain..." or "Contains..."
         advisory_matches = re.finditer(r'\b(contains|may contain)\b[:\s]+(.*?)(?=\.|$)', cleaned, re.IGNORECASE)
         for match in advisory_matches:
             statement_content = match.group(2).lower()
@@ -114,6 +124,7 @@ class IngredientParser:
             })
 
         return results
+
     def get_safety_summary(self, allergen_results: list) -> dict:
         danger_count = sum(1 for r in allergen_results if r.get('status') == 'danger')
         warning_count = sum(1 for r in allergen_results if r.get('status') == 'warning')
