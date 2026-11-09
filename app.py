@@ -1,4 +1,4 @@
-import json
+import json # Force rebuild 1
 import re
 import unicodedata
 from datetime import datetime
@@ -416,11 +416,8 @@ def parse_ingredients(text):
         item = re.sub(r"\s+", " ", part).strip()
         item = re.sub(r"\b\d+(?:\.\d+)?\s*%", "", item).strip()
         item = re.sub(r"\([^)]*\)", "", item).strip()
-        
-        # CRITICAL FIX: Ignore items that don't contain actual letters
-        if len(item) <= 1 or not re.search(r'[a-zA-Z]', item):
+        if len(item) <= 1:
             continue
-            
         key = item.lower()
         if key not in seen:
             result.append(item)
@@ -477,15 +474,11 @@ def add_to_history(record):
 # PDF REPORT GENERATION
 # ============================================================
 def sanitize_text(text):
-    """
-    Strips all emojis, Markdown, and non-ASCII characters so FPDF doesn't crash.
-    """
     if not text:
         return ""
-    text = str(text)
-    normalized = unicodedata.normalize('NFKD', text)
+    normalized = unicodedata.normalize('NFKD', str(text))
     ascii_text = normalized.encode('ascii', 'ignore').decode('ascii')
-    ascii_text = ascii_text.replace("**", "").replace("###", "").replace("*", "")
+    ascii_text = re.sub(r'[^\x00-\x7F]+', ' ', ascii_text)
     return ascii_text
 
 
@@ -538,15 +531,8 @@ def generate_pdf_report(record, parsed_ingredients):
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 8, "Ingredient List (Parsed)", ln=True)
     pdf.set_font("Arial", "", 10)
-    
-    if not parsed_ingredients:
-        pdf.multi_cell(0, 6, "No readable ingredients could be parsed from the image.")
-    else:
-        for i, ing in enumerate(parsed_ingredients, 1):
-            cleaned = sanitize_text(ing)
-            if cleaned.strip():
-                # CRITICAL FIX: multi_cell wraps text and prevents horizontal overflow crashes
-                pdf.multi_cell(0, 6, f"{i}. {cleaned}")
+    for i, ing in enumerate(parsed_ingredients, 1):
+        pdf.cell(0, 5, f"{i}. {sanitize_text(ing)}", ln=True)
 
     pdf.ln(4)
 
@@ -561,10 +547,9 @@ def generate_pdf_report(record, parsed_ingredients):
         pdf.cell(40, 6, "Status", 1, 1, "C")
         pdf.set_font("Arial", "", 10)
         for match in record["matches"]:
-            # Use multi_cell for table rows to prevent crashes on long ingredient strings
-            pdf.multi_cell(60, 6, sanitize_text(match["Allergy"]), 1, "C")
-            pdf.multi_cell(80, 6, sanitize_text(match["Ingredient"]), 1, "L")
-            pdf.multi_cell(40, 6, sanitize_text(match["Status"]), 1, "C")
+            pdf.cell(60, 6, sanitize_text(match["Allergy"]), 1, 0)
+            pdf.cell(80, 6, sanitize_text(match["Ingredient"]), 1, 0)
+            pdf.cell(40, 6, sanitize_text(match["Status"]), 1, 1)
     else:
         pdf.set_font("Arial", "B", 12)
         pdf.set_text_color(0, 150, 0)
@@ -1452,6 +1437,9 @@ elif current_page == "🧪 Part I - LLM Testing":
 # ============================================================
 # PART J — BEFORE / AFTER COMPARISON (with live Part-I integration)
 # ============================================================
+# ============================================================
+# PART J — BEFORE / AFTER COMPARISON (with live Part-I integration)
+# ============================================================
 elif current_page == "⚖️ Part J - Before/After Comparison":
     st.title("⚖️ Part J – Before vs After Comparison")
     st.markdown(
@@ -1460,6 +1448,9 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
     )
     st.divider()
 
+    # ------------------------------------------------------------
+    # Question sets — identical to Part I
+    # ------------------------------------------------------------
     SET1_TESTS = [
         {"question": "What are the ingredients of this product?",
          "expected": "The full ingredient list from the `ingredients` column.",
@@ -1496,6 +1487,9 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
          "source_col": "proteins_100g"},
     ]
 
+    # ------------------------------------------------------------
+    # Verdict helper — identical to Part I
+    # ------------------------------------------------------------
     def _verdict(llm_response, truth_value):
         if truth_value is None:
             return "⚠️"
@@ -1538,6 +1532,7 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             return "⚠️"
 
     def _run_set(product_name, tests, source_df):
+        """Run a test set; return a DataFrame of results."""
         row_matches = source_df[source_df["product_name"].astype(str) == product_name]
         row = row_matches.iloc[0] if not row_matches.empty else None
 
@@ -1564,6 +1559,9 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
         bar.empty()
         return pd.DataFrame(rows)
 
+    # ------------------------------------------------------------
+    # Product pickers (same logic as Part I)
+    # ------------------------------------------------------------
     col_l, col_r = st.columns(2)
 
     with col_l:
@@ -1597,6 +1595,9 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             if not api_pool:
                 st.warning("No API products found in fused dataset.")
 
+    # ------------------------------------------------------------
+    # Run button
+    # ------------------------------------------------------------
     st.divider()
 
     run = st.button("🚀 Run Before/After Evaluation",
@@ -1606,6 +1607,7 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
         if not LLM_AVAILABLE:
             st.error("LLM module not available. Check `llm_engine.py` and `GROQ_API_KEY`.")
         else:
+            # ---------------- Set 1 (Before) ----------------
             st.header("📘 Set 1 – Before-Fusion Questions")
             df1 = None
             if p1:
@@ -1614,6 +1616,7 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             else:
                 st.warning("No product selected for Set 1.")
 
+            # ---------------- Set 2 (After) ----------------
             st.header("📗 Set 2 – After-Fusion Questions")
             df2 = None
             if p2:
@@ -1622,6 +1625,7 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             else:
                 st.warning("No product selected for Set 2.")
 
+            # ---------------- Auto-computed comparison ----------------
             def _counts(df):
                 if df is None or df.empty:
                     return {"total": 0, "correct": 0, "incorrect": 0, "partial": 0}
@@ -1663,6 +1667,9 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
                 "the numbers shift."
             )
 
+    # ------------------------------------------------------------
+    # Always-visible: discussion + state + screenshot guidance
+    # ------------------------------------------------------------
     st.divider()
     st.header("🧠 Discussion")
 
@@ -1716,7 +1723,7 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             st.warning("`get_dataset_status` is not available — cannot verify LLM state.")
     except Exception as e:
         st.error(f"Could not determine LLM state: {e}")
-
+    
 # ============================================================
 # PART K — TECHNICAL DOCUMENTATION
 # ============================================================
