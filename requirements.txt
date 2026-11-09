@@ -8,3 +8,6 @@ numpy
 chromadb
 sentence-transformers
 seaborn
+matplotlib
+scikit-learn
+groq
