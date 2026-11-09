@@ -1,7 +1,7 @@
 streamlit
 pandas
 Pillow
-fpdf
+fpdf2
 python-dotenv
 pytesseract
 numpy
