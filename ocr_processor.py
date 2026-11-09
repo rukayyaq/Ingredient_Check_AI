@@ -1,6 +1,7 @@
 # ocr_processor.py
 import io
 import warnings
+import platform
 import numpy as np
 from PIL import Image
 from typing import Tuple, Optional
@@ -16,7 +17,10 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # Streamlit Cloud uses Linux. We just tell it where Tesseract is installed.
 @st.cache_resource(show_spinner="Loading OCR Engine...")
 def get_ocr_engine():
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    # Fix Tesseract path for both Windows (local) and Linux (Streamlit Cloud)
+    if platform.system() == "Windows":
+        pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    # On Linux (Streamlit Cloud), we don't need to set the path because packages.txt installs it globally.
     return pytesseract
 
 class OCRProcessor:
