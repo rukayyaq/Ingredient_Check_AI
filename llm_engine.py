@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from dotenv import load_dotenv
 from groq import Groq
-
+import streamlit as st
 
 # ============================================================
 # INGREDIENTCHECK AI - LLM ENGINE (Phase 2 - Fused)
@@ -31,16 +31,30 @@ else:
         "was found. Please run fusion_script.py first."
     )
 
-# Load .env
+# Load .env (for local development)
 load_dotenv(BASE_DIR / ".env")
 
-# Get Groq API key
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+# ------------------------------------------------------------
+# API KEY RESOLUTION (CLOUD & LOCAL)
+# ------------------------------------------------------------
+# First, try to get the key from Streamlit Secrets (Cloud)
+# If it's not there, fall back to os.getenv (Local .env)
+GROQ_API_KEY = None
+
+try:
+    if "GROQ_API_KEY" in st.secrets:
+        GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+except Exception:
+    pass
+
+if not GROQ_API_KEY:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not GROQ_API_KEY:
     raise ValueError(
         "GROQ_API_KEY was not found.\n"
-        "Please check your .env file."
+        "If running locally, please check your .env file.\n"
+        "If running on Streamlit Cloud, please add it to your App Secrets."
     )
 
 
