@@ -416,8 +416,11 @@ def parse_ingredients(text):
         item = re.sub(r"\s+", " ", part).strip()
         item = re.sub(r"\b\d+(?:\.\d+)?\s*%", "", item).strip()
         item = re.sub(r"\([^)]*\)", "", item).strip()
-        if len(item) <= 1:
+        
+        # CRITICAL FIX: Ignore items that don't contain actual letters (stops the 1,000 numbers)
+        if len(item) <= 1 or not re.search(r'[a-zA-Z]', item):
             continue
+            
         key = item.lower()
         if key not in seen:
             result.append(item)
@@ -537,8 +540,14 @@ def generate_pdf_report(record, parsed_ingredients):
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 8, "Ingredient List (Parsed)", ln=True)
     pdf.set_font("Arial", "", 10)
-    for i, ing in enumerate(parsed_ingredients, 1):
-        pdf.cell(0, 5, f"{i}. {sanitize_text(ing)}", ln=True)
+    
+    if not parsed_ingredients:
+        pdf.cell(0, 5, "No readable ingredients could be parsed from the image.", ln=True)
+    else:
+        for i, ing in enumerate(parsed_ingredients, 1):
+            cleaned = sanitize_text(ing)
+            if cleaned.strip():
+                pdf.cell(0, 5, f"{i}. {cleaned}", ln=True)
 
     pdf.ln(4)
 
