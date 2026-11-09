@@ -7,3 +7,4 @@ pytesseract
 numpy
 chromadb
 sentence-transformers
+seaborn

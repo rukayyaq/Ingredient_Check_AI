@@ -1,0 +1,13 @@
+product_key,original_product,original_brand,usda_fdc_id,usda_product_name,usda_brand,usda_data_type,usda_match_score,usda_calories
+sidi ali,Sidi Ali,سيدي علي,2053055,"SWEET ALI'S, POUNO CAKE",Sweet Ali's Gluten Free Bakery,Branded,0.323,4.35
+eau minrale naturelle,Eau minérale naturelle,sidi ali,2440343,"ELITE NATUREL, PEAR JUICE",Hybrid Promotions LLC,Branded,0.511,0.1
+lait,Lait,Jaouda,2098140,PAIN AU LAIT,"Galaxy Desserts, Inc.",Branded,0.5,8.57
+eau de source,Eau De Source,Cristaline,2706097,"Chicken nuggets, from other sources",,Survey (FNDDS),0.458,15.15
+fromage blanc nature,Fromage Blanc Nature,Milky Food Professional,2755773,"Fromage Blanc, 8 oz",,Branded,0.718,10.7
+uht jaouda 1l,uht jaouda 1L,Jaouda,453849,UHT NATURAL COCONUT CREAM,KARA,Branded,0.421,0.0
+ain sass,Ain Saïss,Danone,2626075,"STRAWBERRY DIPPED COOKIES, STRAWBERRY","Compania De Galletas Pozuelo Dcr, S.A.",Branded,0.217,5.0
+eau minral naturelle,Eau minéral naturelle,Ain atlas,2058423,"CARAMEL NATUREL, FRESH MEDJOOL DATES","Atlas Produce & Distribution, Inc.",Branded,0.491,2.17
+yeast extract,Yeast Extract,Marmite,2665444,YEAST EXTRACT,"Graham Packaging Company, L.P.",Branded,1.0,50.0
+unknown,Unknown,Jaouda,2419581,"CRANBERRY CRAFT GINGER ALE, CRANBERRY",The Unknown Brewing Company LLC,Branded,0.136,0.0
+coca cola original taste,Coca Cola Original Taste,Coca-Cola,1999231,"COCA-COLA FLAVORED MINTS, COCA-COLA","Ferrero U.S.A., Incorporated",Branded,0.542,0.0
+prince got chocolat,Prince Goût Chocolat,LU,2664585,CHOCOLAT,"Bluehall Bakery, LLC",Branded,0.571,11.6

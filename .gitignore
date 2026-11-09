@@ -1,6 +1,28 @@
+# Environments
 venv/
+env/
+.venv/
+
+# Secrets (CRITICAL)
 .env
+.streamlit/secrets.toml
+
+# Python Caches
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Database
 chroma_db/
+
+# OS Files
 .DS_Store
+Thumbs.db
+
+# Data & Generated Outputs
+# (Uncomment the next line if your CSVs are too big for GitHub)
+# data/*.csv
+eda_*.png
+*.pdf
+analysis_history.json

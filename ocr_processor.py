@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # Streamlit Cloud uses Linux. We just tell it where Tesseract is installed.
 @st.cache_resource(show_spinner="Loading OCR Engine...")
 def get_ocr_engine():
-    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
     return pytesseract
 
 class OCRProcessor:
