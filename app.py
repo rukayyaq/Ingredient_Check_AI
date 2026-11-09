@@ -1,4 +1,4 @@
-import json # Force rebuild 1
+import json
 import re
 import unicodedata
 from datetime import datetime
@@ -471,7 +471,7 @@ def add_to_history(record):
 
 
 # ============================================================
-# PDF REPORT GENERATION
+# PDF REPORT GENERATION (FIXED — fpdf2 >= 2.7 compatible)
 # ============================================================
 def sanitize_text(text):
     if not text:
@@ -479,92 +479,139 @@ def sanitize_text(text):
     normalized = unicodedata.normalize('NFKD', str(text))
     ascii_text = normalized.encode('ascii', 'ignore').decode('ascii')
     ascii_text = re.sub(r'[^\x00-\x7F]+', ' ', ascii_text)
-    return ascii_text
+    return ascii_text.strip()
 
 
 def generate_pdf_report(record, parsed_ingredients):
+    """Generate a complete, non-blank PDF report (works with fpdf2 >= 2.7)."""
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    pdf.set_font("Arial", "B", 20)
+    # ---- HEADER ----
+    pdf.set_font("Helvetica", "B", 20)
     pdf.set_text_color(30, 80, 180)
-    pdf.cell(0, 10, "INGREDIENTCHECK AI", ln=True, align="C")
-    pdf.set_font("Arial", "I", 12)
+    pdf.cell(0, 10, "INGREDIENTCHECK AI",
+             new_x="LMARGIN", new_y="NEXT", align="C")
+
+    pdf.set_font("Helvetica", "I", 12)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 6, "Food Safety Analysis Report", ln=True, align="C")
+    pdf.cell(0, 6, "Food Safety Analysis Report",
+             new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(8)
 
-    pdf.set_font("Arial", "B", 14)
+    # ---- PRODUCT INFO ----
+    pdf.set_font("Helvetica", "B", 14)
     pdf.set_text_color(0, 0, 0)
-    pdf.cell(0, 8, "Product Information", ln=True)
-    pdf.set_font("Arial", "", 11)
-    pdf.cell(50, 6, "Product Name:", 0, 0)
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, sanitize_text(record["product_name"]), ln=True)
-    pdf.set_font("Arial", "", 11)
-    pdf.cell(50, 6, "Analysis Date:", 0, 0)
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, sanitize_text(record["timestamp"]), ln=True)
+    pdf.cell(0, 8, "Product Information",
+             new_x="LMARGIN", new_y="NEXT")
 
-    pdf.set_font("Arial", "", 11)
-    pdf.cell(50, 6, "Allergies Checked:", 0, 0)
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, sanitize_text(", ".join(record["allergies"]) if record["allergies"] else "None"), ln=True)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(50, 6, "Product Name:", new_x="RIGHT", new_y="LAST")
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 6, sanitize_text(record.get("product_name", "Unknown")),
+             new_x="LMARGIN", new_y="NEXT")
 
-    pdf.set_font("Arial", "", 11)
-    pdf.cell(50, 6, "Dietary Preferences:", 0, 0)
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(0, 6, sanitize_text(", ".join(record["diet"]) if record["diet"] else "None"), ln=True)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(50, 6, "Analysis Date:", new_x="RIGHT", new_y="LAST")
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 6, sanitize_text(record.get("timestamp", "")),
+             new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(50, 6, "Allergies Checked:", new_x="RIGHT", new_y="LAST")
+    pdf.set_font("Helvetica", "B", 11)
+    allergies_str = ", ".join(record.get("allergies", [])) or "None"
+    pdf.cell(0, 6, sanitize_text(allergies_str),
+             new_x="LMARGIN", new_y="NEXT")
+
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(50, 6, "Dietary Preferences:", new_x="RIGHT", new_y="LAST")
+    pdf.set_font("Helvetica", "B", 11)
+    diet_str = ", ".join(record.get("diet", [])) or "None"
+    pdf.cell(0, 6, sanitize_text(diet_str),
+             new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
 
-    pdf.set_font("Arial", "B", 14)
-    if record["status"] == "Potential Risk":
+    # ---- STATUS ----
+    pdf.set_font("Helvetica", "B", 14)
+    if record.get("status") == "Potential Risk":
         pdf.set_text_color(200, 0, 0)
-        pdf.cell(0, 8, "STATUS: DANGER - Allergen Detected", ln=True)
+        pdf.cell(0, 8, "STATUS: DANGER - Allergen Detected",
+                 new_x="LMARGIN", new_y="NEXT")
     else:
         pdf.set_text_color(0, 150, 0)
-        pdf.cell(0, 8, "STATUS: SAFE - No Allergen Detected", ln=True)
+        pdf.cell(0, 8, "STATUS: SAFE - No Allergen Detected",
+                 new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
 
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(0, 8, "Ingredient List (Parsed)", ln=True)
-    pdf.set_font("Arial", "", 10)
-    for i, ing in enumerate(parsed_ingredients, 1):
-        pdf.cell(0, 5, f"{i}. {sanitize_text(ing)}", ln=True)
+    # ---- PARSED INGREDIENTS ----
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, "Ingredient List (Parsed)",
+             new_x="LMARGIN", new_y="NEXT")
+
+    if parsed_ingredients:
+        pdf.set_font("Helvetica", "", 10)
+        for i, ing in enumerate(parsed_ingredients, 1):
+            safe = sanitize_text(ing) or "Unknown ingredient"
+            pdf.multi_cell(0, 5, f"{i}. {safe}",
+                           new_x="LMARGIN", new_y="NEXT")
+    else:
+        pdf.set_font("Helvetica", "I", 10)
+        pdf.cell(0, 5, "(No ingredients could be parsed)",
+                 new_x="LMARGIN", new_y="NEXT")
 
     pdf.ln(4)
 
-    if record["matches"]:
-        pdf.set_font("Arial", "B", 12)
+    # ---- ALLERGEN MATCHES TABLE ----
+    matches = record.get("matches", [])
+    if matches:
+        pdf.set_font("Helvetica", "B", 12)
         pdf.set_text_color(200, 0, 0)
-        pdf.cell(0, 8, "Allergen Matches Found", ln=True)
-        pdf.set_text_color(0, 0, 0)
-        pdf.set_font("Arial", "B", 10)
-        pdf.cell(60, 6, "Allergy", 1, 0, "C")
-        pdf.cell(80, 6, "Ingredient", 1, 0, "C")
-        pdf.cell(40, 6, "Status", 1, 1, "C")
-        pdf.set_font("Arial", "", 10)
-        for match in record["matches"]:
-            pdf.cell(60, 6, sanitize_text(match["Allergy"]), 1, 0)
-            pdf.cell(80, 6, sanitize_text(match["Ingredient"]), 1, 0)
-            pdf.cell(40, 6, sanitize_text(match["Status"]), 1, 1)
-    else:
-        pdf.set_font("Arial", "B", 12)
-        pdf.set_text_color(0, 150, 0)
-        pdf.cell(0, 8, "No Allergen Matches", ln=True)
+        pdf.cell(0, 8, "Allergen Matches Found",
+                 new_x="LMARGIN", new_y="NEXT")
         pdf.set_text_color(0, 0, 0)
 
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(55, 6, "Allergy", 1,
+                 new_x="RIGHT", new_y="LAST", align="C")
+        pdf.cell(85, 6, "Ingredient", 1,
+                 new_x="RIGHT", new_y="LAST", align="C")
+        pdf.cell(40, 6, "Status", 1,
+                 new_x="LMARGIN", new_y="NEXT", align="C")
+
+        pdf.set_font("Helvetica", "", 10)
+        for m in matches:
+            pdf.cell(55, 6, sanitize_text(m.get("Allergy", "")), 1,
+                     new_x="RIGHT", new_y="LAST")
+            pdf.cell(85, 6, sanitize_text(m.get("Ingredient", "")), 1,
+                     new_x="RIGHT", new_y="LAST")
+            pdf.cell(40, 6, sanitize_text(m.get("Status", "")), 1,
+                     new_x="LMARGIN", new_y="NEXT")
+    else:
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.set_text_color(0, 150, 0)
+        pdf.cell(0, 8, "No Allergen Matches",
+                 new_x="LMARGIN", new_y="NEXT")
+        pdf.set_text_color(0, 0, 0)
+
+    # ---- FOOTER ----
     pdf.ln(6)
-    pdf.set_font("Arial", "I", 9)
+    pdf.set_font("Helvetica", "I", 9)
     pdf.set_text_color(100, 100, 100)
-    pdf.cell(0, 6, "This report is generated by IngredientCheck AI and is not a medical diagnosis.", ln=True)
+    pdf.multi_cell(
+        0, 5,
+        "This report is generated by IngredientCheck AI "
+        "and is not a medical diagnosis.",
+        new_x="LMARGIN", new_y="NEXT"
+    )
 
-    pdf_bytes = pdf.output(dest='S')
-    if isinstance(pdf_bytes, bytearray):
-        pdf_bytes = bytes(pdf_bytes)
-    return pdf_bytes
+    # ---- RETURN BYTES (fpdf2-safe + fpdf1-safe) ----
+    out = pdf.output()
+    if isinstance(out, str):
+        return out.encode("latin-1")
+    return bytes(out)
 
 
 # ============================================================
@@ -1437,9 +1484,6 @@ elif current_page == "🧪 Part I - LLM Testing":
 # ============================================================
 # PART J — BEFORE / AFTER COMPARISON (with live Part-I integration)
 # ============================================================
-# ============================================================
-# PART J — BEFORE / AFTER COMPARISON (with live Part-I integration)
-# ============================================================
 elif current_page == "⚖️ Part J - Before/After Comparison":
     st.title("⚖️ Part J – Before vs After Comparison")
     st.markdown(
@@ -1448,9 +1492,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
     )
     st.divider()
 
-    # ------------------------------------------------------------
-    # Question sets — identical to Part I
-    # ------------------------------------------------------------
     SET1_TESTS = [
         {"question": "What are the ingredients of this product?",
          "expected": "The full ingredient list from the `ingredients` column.",
@@ -1487,9 +1528,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
          "source_col": "proteins_100g"},
     ]
 
-    # ------------------------------------------------------------
-    # Verdict helper — identical to Part I
-    # ------------------------------------------------------------
     def _verdict(llm_response, truth_value):
         if truth_value is None:
             return "⚠️"
@@ -1559,9 +1597,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
         bar.empty()
         return pd.DataFrame(rows)
 
-    # ------------------------------------------------------------
-    # Product pickers (same logic as Part I)
-    # ------------------------------------------------------------
     col_l, col_r = st.columns(2)
 
     with col_l:
@@ -1595,9 +1630,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             if not api_pool:
                 st.warning("No API products found in fused dataset.")
 
-    # ------------------------------------------------------------
-    # Run button
-    # ------------------------------------------------------------
     st.divider()
 
     run = st.button("🚀 Run Before/After Evaluation",
@@ -1607,7 +1639,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
         if not LLM_AVAILABLE:
             st.error("LLM module not available. Check `llm_engine.py` and `GROQ_API_KEY`.")
         else:
-            # ---------------- Set 1 (Before) ----------------
             st.header("📘 Set 1 – Before-Fusion Questions")
             df1 = None
             if p1:
@@ -1616,7 +1647,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             else:
                 st.warning("No product selected for Set 1.")
 
-            # ---------------- Set 2 (After) ----------------
             st.header("📗 Set 2 – After-Fusion Questions")
             df2 = None
             if p2:
@@ -1625,7 +1655,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
             else:
                 st.warning("No product selected for Set 2.")
 
-            # ---------------- Auto-computed comparison ----------------
             def _counts(df):
                 if df is None or df.empty:
                     return {"total": 0, "correct": 0, "incorrect": 0, "partial": 0}
@@ -1667,9 +1696,6 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
                 "the numbers shift."
             )
 
-    # ------------------------------------------------------------
-    # Always-visible: discussion + state + screenshot guidance
-    # ------------------------------------------------------------
     st.divider()
     st.header("🧠 Discussion")
 
@@ -1724,6 +1750,7 @@ elif current_page == "⚖️ Part J - Before/After Comparison":
     except Exception as e:
         st.error(f"Could not determine LLM state: {e}")
     
+
 # ============================================================
 # PART K — TECHNICAL DOCUMENTATION
 # ============================================================
