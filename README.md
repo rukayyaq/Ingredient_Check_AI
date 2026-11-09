@@ -18,9 +18,6 @@ Built using Python and Streamlit, the application combines global food informati
 
 > The live application may have limited functionality depending on API availability and deployment resources.
 
-## 📸 Application Dashboard
-
-![IngredientCheck AI Dashboard](screenshots/dashboard.png)
 
 ---
 
