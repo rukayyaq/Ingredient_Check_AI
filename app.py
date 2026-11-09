@@ -1,4 +1,4 @@
-import json # Force rebuild 1
+import json
 import re
 import unicodedata
 from datetime import datetime
@@ -474,11 +474,17 @@ def add_to_history(record):
 # PDF REPORT GENERATION
 # ============================================================
 def sanitize_text(text):
+    """
+    Strips all emojis, Markdown, and non-ASCII characters so FPDF doesn't crash.
+    """
     if not text:
         return ""
-    normalized = unicodedata.normalize('NFKD', str(text))
+    text = str(text)
+    # Normalize and encode to ASCII, ignoring everything that can't be encoded (like emojis)
+    normalized = unicodedata.normalize('NFKD', text)
     ascii_text = normalized.encode('ascii', 'ignore').decode('ascii')
-    ascii_text = re.sub(r'[^\x00-\x7F]+', ' ', ascii_text)
+    # Remove markdown symbols that look ugly in PDF
+    ascii_text = ascii_text.replace("**", "").replace("###", "").replace("*", "")
     return ascii_text
 
 
@@ -1434,9 +1440,6 @@ elif current_page == "🧪 Part I - LLM Testing":
             st.dataframe(pd.DataFrame(SET2_TESTS), use_container_width=True, hide_index=True)
 
 
-# ============================================================
-# PART J — BEFORE / AFTER COMPARISON (with live Part-I integration)
-# ============================================================
 # ============================================================
 # PART J — BEFORE / AFTER COMPARISON (with live Part-I integration)
 # ============================================================
